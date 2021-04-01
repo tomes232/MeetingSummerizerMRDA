@@ -14,13 +14,13 @@ for key in meeting_dict:
     corpus_tfidf = td_idf(corpus_bow)
 
     print("LDA TD-IDF topic modeling with 10 topics")
-    lda_model_tfidf = gensim.models.LdaModel(corpus_tfidf, num_topics=10, id2word=dictionary, passes=2)
+    lda_model_tfidf = gensim.models.hdpmodel.HdpModel(corpus_tfidf, dictionary)
     for idx, topic in lda_model_tfidf.print_topics(-1):
         print('Topic: {} Word: {}'.format(idx, topic))
     print("\n")
 
     print("LDA Bag of Words topic modeling with 10 topics")
-    lda_model = gensim.models.LdaModel(corpus_bow, num_topics=10, id2word=dictionary, passes=2)
+    lda_model = gensim.models.hdpmodel.HdpModel(corpus_bow, dictionary)
     for idx, topic in lda_model.print_topics(-1):
         print('Topic: {} \nWords: {}'.format(idx, topic))
     print("\n\n\n")

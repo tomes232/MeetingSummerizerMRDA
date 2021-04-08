@@ -28,7 +28,7 @@ def preprocess(text):
 def read_data(transcript_dir='./ami-transcripts'):
     files = [f for f in listdir(transcript_dir)]
     meeting_dict = {}
-    for filename in files[0:1]:
+    for filename in files[1:2]:
         f = open(transcript_dir+"/"+filename, "r")
         dialog = []
         for line in f:

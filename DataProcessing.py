@@ -25,17 +25,17 @@ def preprocess(text):
             result.append(lemmatize_stemming(token))
     return result
 
-def read_data(transcript_dir='./train'):
+def read_data(transcript_dir='./ami-transcripts'):
     files = [f for f in listdir(transcript_dir)]
     meeting_dict = {}
-    for filename in files[0:4]:
+    for filename in files[1:2]:
         f = open(transcript_dir+"/"+filename, "r")
         dialog = []
         for line in f:
             line = line.replace('\n', '')
             content_list = line.split('|')
-            dialog.append({'speaker':content_list[0], 'dialog':preprocess(content_list[1]), 'da_tags':content_list[2:]})
-        meeting_dict[filename[0:-4]] = dialog
+            dialog.append({'speaker':'', 'dialog':preprocess(content_list[0]), 'da_tags':''})
+        meeting_dict[filename[0:-1]] = dialog
     return meeting_dict
 
 def lda_bag_of_words(meeting_dict, verbose=False):
@@ -46,7 +46,7 @@ def lda_bag_of_words(meeting_dict, verbose=False):
     for dialog in meeting_dict:
         if len(dialog['dialog']) != 0:
             processed_doc.append(dialog['dialog'])
-    
+
     word_dict = gensim.corpora.Dictionary(processed_doc)
 
     if verbose:
@@ -61,8 +61,8 @@ def lda_bag_of_words(meeting_dict, verbose=False):
     if(verbose):
         bow_doc_4 = bow_corpus[4]
         for i in range(len(bow_doc_4)):
-            print("Word {} (\"{}\") appears {} time.".format(bow_doc_4[i][0], 
-                                                    word_dict[bow_doc_4[i][0]], 
+            print("Word {} (\"{}\") appears {} time.".format(bow_doc_4[i][0],
+                                                    word_dict[bow_doc_4[i][0]],
                                                     bow_doc_4[i][1]))
     return word_dict, bow_corpus
 
@@ -74,7 +74,7 @@ def td_idf(bow_corpus, verbose=False):
             pprint(doc)
             break
     return corpus_tfidf
-    
+
 
 
 def bag_of_words(transcript):
@@ -83,6 +83,3 @@ def bag_of_words(transcript):
         if len(dialog['dialog']) != 0:
             full_text.append(dialog['dialog'])
     word_dict = gensim.corpora.Dictionary(full_text)
-
-
-

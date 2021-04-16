@@ -61,7 +61,7 @@ def texttile(text, w, lda):
         seg1_topic_prob_vec = []
         seg2_topic_prob_vec = []
 
-        # top of pseudocode in paper
+        # top of pseudocode for Algo 1 in paper
         sim_score = 0
         for topic_id in topic_id_set:
             # for all words in segment 1, add the probabilites the word connects to the topic
@@ -80,9 +80,50 @@ def texttile(text, w, lda):
         # Find the cosine similarity of the vecs
         # gap_scores.append(np.dot(seg1_topic_prob_vec, seg2_topic_prob_vec))
 
-    # compute the depth scores
-    depth_scores = []
-    for i in range(1, len(gap_scores) - 1):
-        depth_scores.append((gap_scores[i - 1] - gap_scores[i]) + (gap_scores[i + 1] - gap_scores[i]))
+    # find the peaks
+    peaks = []
+    for i in range(len(gap_scores)):
+        if(i > 0 and i < (len(gap_scores) - 1)):
+            if(gap_scores[i] > gap_scores[i-1] and gap_scores[i] > gap_scores[i+1]):
+                peaks.append(i)
+        elif(i == 0):
+            if(gap_scores[i] > gap_scores[i+1]):
+                peaks.append(i)
+        elif(gap_scores[i] > gap_scores[i-1]):
+            peaks.append(i)
+    
+    # compute depths between peaks
+    depths = []
+    for i in range(len(peaks) - 1):
+        # check all the points between the peaks and find the lowest one.
+        lowest_score = gap_scores[peaks[i]]
+        lowest_point = 0
+        for j in range(peaks[i] + 1, peaks[i + 1]):
+            if gap_scores[j] < lowest_point:
+                lowest_point = j
+                lowest_score = gap_scores[j]
+        depth_score = (peaks[i] - lowest_score) + (peaks[i + 1] - lowest_score)
+        depths.append((lowest_point, depth_score))
+
+    final_partition = []
+    prev = 0
+    for depth in depths:
+        partition = []
+        for i in range(prev, depth[0]):
+            partition + segments[i]
+        prev = depth[0]
+        final_partition.append(partition)
+    
+    if(depths[-1][0] != (len(gap_scores) - 1)):
+        partition = []
+        for i in range(prev, len(gap_scores)):
+            partition + segments[i]
+        final_partition.append(partition)
+
+    return final_partition
+    # # compute the depth scores
+    # depth_scores = []
+    # for i in range(1, len(gap_scores) - 1):
+    #     depth_scores.append((gap_scores[i - 1] - gap_scores[i]) + (gap_scores[i + 1] - gap_scores[i]))
 
     

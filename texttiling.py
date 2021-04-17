@@ -1,6 +1,8 @@
 import nltk
 import statistics
 import numpy as np
+import gensim
+from gensim.corpora.dictionary import Dictionary
 
 def segment_tokens(lst, n):
     segments = []
@@ -18,9 +20,9 @@ def segment_tokens(lst, n):
     return segments
 
 
-def build_topic_prob_dict(lda, topic_id, segment_topics):
+def build_topic_prob_dict(lda, topic_id, words):
     topic_dict = {}
-    for word in topics_1:
+    for word in words:
         topic_probs = lda.get_term_topics(word)
         # find topic id in the generated list
         topic_found = False
@@ -40,21 +42,27 @@ def build_topic_prob_dict(lda, topic_id, segment_topics):
 # dict from a word to its set of (topic, prob) sets
 def texttile(text, w, lda):
     # begin by tokenizing the text so it's easier to work with
-    text_tokens = nltk.word_tokenize(text)
+    print("tokenizing")
+    # text_tokens = nltk.word_tokenize(text)
+    text_tokens = gensim.utils.simple_preprocess(text)
 
+    print("segmenting tokens")
     # segment the text
     segments = segment_tokens(text_tokens, w)
 
     # compute the gap scores (Section 3.2 of guiding paper)
+
+    print("computing gap scores")
     gap_scores = []
-    for i in range(len(segments - 1)):
+    for i in range(len(segments) - 1):
         # find the gap score for segments i and i + 1
         # find the topic intersection
         # TODO  look into getting the segments in bow format
-        seg1_topics = lda.get_document_topics(lda.doc2bow(segments[i]))
-        seg2_topics = lda.get_document_topics(lda.doc2bow(segments[i + 1]))
+        print(segments[i])
+        seg1_topics = lda.get_document_topics(lda.id2word.doc2bow(segments[i]))
+        seg2_topics = lda.get_document_topics(lda.id2word.doc2bow(segments[i+1]))
         
-        topic_id_set = {} 
+        topic_id_set = set()
         for topic in seg1_topics + seg2_topics:
             topic_id_set.add(topic[0])
 
@@ -65,8 +73,8 @@ def texttile(text, w, lda):
         sim_score = 0
         for topic_id in topic_id_set:
             # for all words in segment 1, add the probabilites the word connects to the topic
-            seg1_topic_dict = build_topic_prob_dict(lda, topic_id, seg1_topic_dict)
-            seg2_topic_dict = build_topic_prob_dict(lda, topic_id, seg2_topic_dict)
+            seg1_topic_dict = build_topic_prob_dict(lda, topic_id, segments[i])
+            seg2_topic_dict = build_topic_prob_dict(lda, topic_id, segments[i+1])
 
             avg_seg1_prob = statistics.mean(seg1_topic_dict.values())
             avg_seg2_prob = statistics.mean(seg2_topic_dict.values())
@@ -80,6 +88,7 @@ def texttile(text, w, lda):
         # Find the cosine similarity of the vecs
         # gap_scores.append(np.dot(seg1_topic_prob_vec, seg2_topic_prob_vec))
 
+    print("finding peaks")
     # find the peaks
     peaks = []
     for i in range(len(gap_scores)):
@@ -91,7 +100,8 @@ def texttile(text, w, lda):
                 peaks.append(i)
         elif(gap_scores[i] > gap_scores[i-1]):
             peaks.append(i)
-    
+
+    print("computing depth scores")
     # compute depths between peaks
     depths = []
     for i in range(len(peaks) - 1):
@@ -105,6 +115,8 @@ def texttile(text, w, lda):
         depth_score = (peaks[i] - lowest_score) + (peaks[i + 1] - lowest_score)
         depths.append((lowest_point, depth_score))
 
+
+    print("partitioning")
     final_partition = []
     prev = 0
     for depth in depths:
@@ -126,4 +138,25 @@ def texttile(text, w, lda):
     # for i in range(1, len(gap_scores) - 1):
     #     depth_scores.append((gap_scores[i - 1] - gap_scores[i]) + (gap_scores[i + 1] - gap_scores[i]))
 
-    
+
+
+def main():
+    print("Opening file")
+    file = open("file.txt", "r")
+    print("reading in the file")
+    text = file.read()
+    print("Loading the model")
+    lda = gensim.models.LdaModel.load('lda.model')
+    print("Calling texttile")
+    partitioning = texttile(text, 20, lda)
+
+    for segment in partitioning:
+        string = ""
+        for word in segment:
+            string = string + " " + word
+        print(string)
+        print("NEXT SEGMENT")
+
+
+if __name__ == "__main__":
+    main()

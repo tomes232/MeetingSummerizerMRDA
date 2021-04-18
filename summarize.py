@@ -10,7 +10,6 @@ from sumy.summarizers.luhn import LuhnSummarizer
 
 from rouge_score import rouge_scorer
 
-
 def summary(titles, segments):
     #print(type(segments))
     summary_list = []
@@ -62,4 +61,5 @@ def score(generated_summary, actual_summary):
     scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     scores = scorer.score(generated_summary,actual_summary)
     return scores
+
 

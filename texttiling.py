@@ -232,7 +232,30 @@ def texttile(text, w, lda):
     #     depth_scores.append((gap_scores[i - 1] - gap_scores[i]) + (gap_scores[i + 1] - gap_scores[i]))
 
 #def partition_document(text, partition):
-#    for text
+
+def run_texttile(file):
+    file = open(file, "r")
+    print("reading in the file")
+    text = file.read()
+    print("Loading the model")
+    lda = gensim.models.LdaModel.load('lda.model')
+    print("Calling texttile")
+    partitioning, text_segments = texttile(text, 20, lda)
+
+    print("partitioning length: ", len(partitioning))
+    titles = []
+    for segment in partitioning:
+        dictionary = Dictionary()
+        sentence_bow = dictionary.doc2bow(segment, allow_update=True)
+        topics = lda.get_document_topics(sentence_bow)
+        topics.sort(key = operator.itemgetter(1))
+        topic_term_list = lda.show_topic(topics[0][0], topn=1000)
+        terms = []
+        for term in topic_term_list:
+            terms.append(term[0])
+        titles.append(terms)
+
+    return titles, text_segments
 
 
 def main():
@@ -249,13 +272,6 @@ def main():
     print("partitioning length: ", len(partitioning))
     titles = []
     for segment in partitioning:
-        string = ""
-        #print("len(segment): ", len(segment))
-        for word in segment:
-            string = string + " " + word
-        #print(string)
-        #print("NEXT SEGMENT")
-
         dictionary = Dictionary()
         sentence_bow = dictionary.doc2bow(segment, allow_update=True)
         topics = lda.get_document_topics(sentence_bow)

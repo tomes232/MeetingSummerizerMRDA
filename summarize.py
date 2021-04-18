@@ -10,6 +10,12 @@ from sumy.summarizers.luhn import LuhnSummarizer
 
 from rouge_score import rouge_scorer
 
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+
 def summary(titles, segments):
     #print(type(segments))
     summary_list = []
@@ -60,6 +66,23 @@ def luhn_summary(segments):
 def score(generated_summary, actual_summary):
     scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     scores = scorer.score(generated_summary,actual_summary)
-    return scores
+    return create_score_histogram(scores)
 
+def create_score_histogram(scores):
+
+    labels = ['precision', 'recall', 'fmeasure']
+    keys = ['rouge1', 'rouge2', 'rougeL']
+    fig, ax = plt.subplots(1, len(scores))
+    for idx, score in enumerate(keys):
+        ax[idx].set_ylim([0, 1])
+        ax[idx].title.set_text(score)
+        ax[idx].bar(np.arange(3), height=scores[score])
+        ax[idx].set_xticklabels(['','precision', 'recall', 'fmeasure'])
+
+        for index, value in enumerate(scores[score]):
+            ax[idx].text(index,value, str(value))
+
+        plt.subplots_adjust(hspace = 1)
+
+    plt.show()
 

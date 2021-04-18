@@ -71,7 +71,7 @@ def build_topic_prob_dict(lda, topic_id, words):
                 # we found the topic, add the probability to the set.
                 topic_found = True
                 topic_dict[word] = topic[1]
-            
+
         if not topic_found:
             topic_dict[topic_id] = 0
     #print("len(topic_dict): ", len(topic_dict))
@@ -103,7 +103,7 @@ def texttile(text, w, lda):
             deleted_sentences.append(x)
 
         x += 1
-        
+
 
     for index in sorted(deleted_sentences, reverse=True):
         del sentences[index]
@@ -198,7 +198,7 @@ def texttile(text, w, lda):
         depth_score = (peaks[i] - lowest_score) + (peaks[i + 1] - lowest_score)
         #print("local min at index: ", lowest_point)
         depths.append((lowest_point, depth_score))
-    
+
     text_segments = []
     begin = 0
     for index, score in depths:
@@ -218,7 +218,7 @@ def texttile(text, w, lda):
             partition = partition + segments[i]
         prev = depth[0]
         final_partition.append(partition)
-    
+
     if(depths[-1][0] != (len(gap_scores) - 1)):
         partition = []
         for i in range(prev, len(gap_scores)):
@@ -232,7 +232,7 @@ def texttile(text, w, lda):
     #     depth_scores.append((gap_scores[i - 1] - gap_scores[i]) + (gap_scores[i + 1] - gap_scores[i]))
 
 #def partition_document(text, partition):
-#    for text 
+
 def run_texttile(file):
     file = open(file, "r")
     print("reading in the file")
@@ -298,7 +298,7 @@ def main():
     print(text_sum)
     print(summarize.score(summary,text_sum))
 
-    
+
 
 
 if __name__ == "__main__":

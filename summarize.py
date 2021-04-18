@@ -70,15 +70,16 @@ def create_score_histogram(scores):
 
     labels = ['precision', 'recall', 'fmeasure']
     keys = ['rouge1', 'rouge2', 'rougeL']
-    print(scores)
     fig, ax = plt.subplots(1, len(scores))
     for idx, score in enumerate(keys):
+        ax[idx].set_ylim([0, 1])
         ax[idx].title.set_text(score)
         ax[idx].bar(np.arange(3), height=scores[score])
-        ax[idx].set_xticks(np.arange(3), labels)
+        ax[idx].set_xticklabels(['','precision', 'recall', 'fmeasure'])
 
         for index, value in enumerate(scores[score]):
             ax[idx].text(index,value, str(value))
 
         plt.subplots_adjust(hspace = 1)
+
     plt.show()

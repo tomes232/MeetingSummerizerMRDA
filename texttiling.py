@@ -3,6 +3,43 @@ import statistics
 import numpy as np
 import gensim
 from gensim.corpora.dictionary import Dictionary
+import summarize
+import operator
+
+import re
+alphabets= "([A-Za-z])"
+prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
+suffixes = "(Inc|Ltd|Jr|Sr|Co)"
+starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
+websites = "[.](com|net|org|io|gov)"
+
+def segment_tokens_sentances(text):
+    text = " " + text + "  "
+    text = text.replace("\n"," ")
+    text = re.sub(prefixes,"\\1<prd>",text)
+    text = re.sub(websites,"<prd>\\1",text)
+    if "Ph.D" in text: text = text.replace("Ph.D.","Ph<prd>D<prd>")
+    text = re.sub("\s" + alphabets + "[.] "," \\1<prd> ",text)
+    text = re.sub(acronyms+" "+starters,"\\1<stop> \\2",text)
+    text = re.sub(alphabets + "[.]" + alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>\\3<prd>",text)
+    text = re.sub(alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>",text)
+    text = re.sub(" "+suffixes+"[.] "+starters," \\1<stop> \\2",text)
+    text = re.sub(" "+suffixes+"[.]"," \\1<prd>",text)
+    text = re.sub(" " + alphabets + "[.]"," \\1<prd>",text)
+    if "”" in text: text = text.replace(".”","”.")
+    if "\"" in text: text = text.replace(".\"","\".")
+    if "!" in text: text = text.replace("!\"","\"!")
+    if "?" in text: text = text.replace("?\"","\"?")
+    text = text.replace(".",".<stop>")
+    text = text.replace("?","?<stop>")
+    text = text.replace("!","!<stop>")
+    text = text.replace("<prd>",".")
+    text = text.replace(u'\xa0', u' ')
+    sentences = text.split("<stop>")
+    sentences = sentences[:-1]
+    sentences = [s.strip() for s in sentences]
+    return sentences
 
 def segment_tokens(lst, n):
     segments = []
@@ -47,14 +84,24 @@ def texttile(text, w, lda):
     # begin by tokenizing the text so it's easier to work with
     print("tokenizing")
     # text_tokens = nltk.word_tokenize(text)
-    text_tokens = []
-    for token in gensim.utils.simple_preprocess(text):
-        if token not in gensim.parsing.preprocessing.STOPWORDS and len(token) > 3:
-            text_tokens.append(token)
+    sentances = segment_tokens_sentances(text)
+    print(sentances)
+    segments = []
+    for segment in sentances:
+        text_tokens = []
+        if len(nltk.word_tokenize(segment)) > 5:
+            for token in gensim.utils.simple_preprocess(segment):
+                if token not in gensim.parsing.preprocessing.STOPWORDS and len(token) > 3:
+                    text_tokens.append(token)
+
+            segments.append(text_tokens)
+
+    
 
     print("segmenting tokens")
+    print(segments)
     # segment the text
-    segments = segment_tokens(text_tokens, w)
+    #segments = segment_tokens(text_tokens, w)
 
     # compute the gap scores (Section 3.2 of guiding paper)
 
@@ -141,6 +188,14 @@ def texttile(text, w, lda):
         depth_score = (peaks[i] - lowest_score) + (peaks[i + 1] - lowest_score)
         print("local min at index: ", lowest_point)
         depths.append((lowest_point, depth_score))
+    
+    text_segments = []
+    begin = 0
+    for index, score in depths:
+        text_segments.append(sentances[begin:index])
+        begin = index
+    text_segments.append(sentances[depths[-1][0]:])
+
 
 
     print("len(depth_scores): ", len(depths))
@@ -160,25 +215,29 @@ def texttile(text, w, lda):
             partition = partition + segments[i]
         final_partition.append(partition)
 
-    return final_partition
+    return final_partition, text_segments
     # # compute the depth scores
     # depth_scores = []
     # for i in range(1, len(gap_scores) - 1):
     #     depth_scores.append((gap_scores[i - 1] - gap_scores[i]) + (gap_scores[i + 1] - gap_scores[i]))
 
+#def partition_document(text, partition):
+#    for text 
 
 
 def main():
     print("Opening file")
-    file = open("file.txt", "r")
+    #file = open("file.txt", "r")
+    file = open("ami-transcripts/EN2001a.transcript.txt", "r")
     print("reading in the file")
     text = file.read()
     print("Loading the model")
     lda = gensim.models.LdaModel.load('lda.model')
     print("Calling texttile")
-    partitioning = texttile(text, 20, lda)
+    partitioning, text_segments = texttile(text, 20, lda)
 
     print("partitioning length: ", len(partitioning))
+    titles = []
     for segment in partitioning:
         string = ""
         print("len(segment): ", len(segment))
@@ -186,6 +245,24 @@ def main():
             string = string + " " + word
         print(string)
         print("NEXT SEGMENT")
+
+        dictionary = Dictionary()
+        sentence_bow = dictionary.doc2bow(segment, allow_update=True)
+        topics = lda.get_document_topics(sentence_bow)
+        topics.sort(key = operator.itemgetter(1))
+        topic_term_list = lda.show_topic(topics[0][0], topn=1000)
+        terms = []
+        for term in topic_term_list:
+            terms.append(term[0])
+        titles.append(terms)
+
+
+    print("Summarize:")
+    print(len(text))
+    print(len(summarize.summary(titles, text_segments)))
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    print(summarize.summary(titles, text_segments))
+    
 
 
 if __name__ == "__main__":

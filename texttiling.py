@@ -82,7 +82,7 @@ def build_topic_prob_dict(lda, topic_id, words):
 # dict from a word to its set of (topic, prob) sets
 def texttile(text, w, lda):
     # begin by tokenizing the text so it's easier to work with
-    print("tokenizing")
+    #print("tokenizing")
     # text_tokens = nltk.word_tokenize(text)
     sentences = segment_tokens_sentences(text)
     #print(sentences)
@@ -108,14 +108,14 @@ def texttile(text, w, lda):
     for index in sorted(deleted_sentences, reverse=True):
         del sentences[index]
 
-    print("segmenting tokens")
+    #print("segmenting tokens")
     #print(segments)
     # segment the text
     #segments = segment_tokens(text_tokens, w)
 
     # compute the gap scores (Section 3.2 of guiding paper)
 
-    print("computing gap scores")
+    #print("computing gap scores")
     gap_scores = []
     for i in range(len(segments) - 1):
         # find the gap score for segments i and i + 1
@@ -162,14 +162,14 @@ def texttile(text, w, lda):
         gap_scores.append(sim_score)
         # Find the cosine similarity of the vecs
         # gap_scores.append(np.dot(seg1_topic_prob_vec, seg2_topic_prob_vec))
-    print("gap scores")
-    for gap_score in gap_scores:
-        print(gap_score)
+    #print("gap scores")
+    #for gap_score in gap_scores:
+        #print(gap_score)
 
     #print("finding peaks")
     # find the peaks
     peaks = []
-    print("number of gap scores: ", len(gap_scores))
+    #print("number of gap scores: ", len(gap_scores))
     for i in range(len(gap_scores)):
         if(i > 0 and i < (len(gap_scores) - 1)):
             if(gap_scores[i] > gap_scores[i-1] and gap_scores[i] > gap_scores[i+1]):
@@ -183,10 +183,10 @@ def texttile(text, w, lda):
             #print("peak found at index: ", str(i))
             peaks.append(i)
 
-    print("computing depth scores")
+    #print("computing depth scores")
     # compute depths between peaks
     depths = []
-    print("number of peaks: ", len(peaks))
+    #print("number of peaks: ", len(peaks))
     for i in range(len(peaks) - 1):
         # check all the points between the peaks and find the lowest one.
         lowest_score = gap_scores[peaks[i]]
@@ -208,8 +208,8 @@ def texttile(text, w, lda):
 
 
 
-    print("len(depth_scores): ", len(depths))
-    print("partitioning")
+    #print("len(depth_scores): ", len(depths))
+    #print("partitioning")
     final_partition = []
     prev = 0
     for depth in depths:
@@ -235,14 +235,14 @@ def texttile(text, w, lda):
 
 def run_texttile(file):
     file = open(file, "r")
-    print("reading in the file")
+    #print("reading in the file")
     text = file.read()
-    print("Loading the model")
+    #print("Loading the model")
     lda = gensim.models.LdaModel.load('lda.model')
-    print("Calling texttile")
+    #print("Calling texttile")
     partitioning, text_segments = texttile(text, 20, lda)
 
-    print("partitioning length: ", len(partitioning))
+    #print("partitioning length: ", len(partitioning))
     titles = []
     for segment in partitioning:
         dictionary = Dictionary()
@@ -259,17 +259,17 @@ def run_texttile(file):
 
 
 def main():
-    print("Opening file")
+    #print("Opening file")
     #file = open("file.txt", "r")
     file = open("ami-transcripts/ES2014c.transcript.txt", "r")
-    print("reading in the file")
+    #print("reading in the file")
     text = file.read()
-    print("Loading the model")
+    #print("Loading the model")
     lda = gensim.models.LdaModel.load('lda.model')
-    print("Calling texttile")
+    #print("Calling texttile")
     partitioning, text_segments = texttile(text, 20, lda)
 
-    print("partitioning length: ", len(partitioning))
+    #print("partitioning length: ", len(partitioning))
     titles = []
     for segment in partitioning:
         dictionary = Dictionary()
@@ -297,6 +297,7 @@ def main():
     text_sum = sum_file.read()
     print(text_sum)
     print(summarize.score(summary,text_sum))
+    summarize.create_score_histogram(summarize.score(summary,text_sum))
 
 
 

@@ -1,5 +1,5 @@
 from os import listdir
-from os.path import join 
+from os.path import join
 import summarize
 import texttiling
 
@@ -13,14 +13,14 @@ def get_transcripts_stats(transcript_dir, summary_dir):
     summary_files = [f.split(".")[0] for f in listdir(summary_dir)]
     #print("summary files: ", summary_files)
     both_files = list(set(transcript_files) & set(summary_files))
-    print("both files: ", len(both_files))
-    
-    
+    #print("both files: ", len(both_files))
+
+
     transcript_files = [join(transcript_dir,f) for f in listdir(transcript_dir) if f.split(".")[0] in both_files]
-    print("transcript files: ", len(transcript_files))
+    #print("transcript files: ", len(transcript_files))
 
     summary_files = [join(summary_dir, f) for f in listdir(summary_dir) if f.split(".")[0] in both_files]
-    print("summary files: ", len(summary_files))
+    #print("summary files: ", len(summary_files))
 
     l = []
     m = []
@@ -39,7 +39,7 @@ def get_transcripts_stats(transcript_dir, summary_dir):
         ami_sum = sum_file.read()
 
         tran_file = open(tf, "r")
-        ami_tran = sum_file.read()
+        ami_tran = tran_file.read()
 
         rouge_stats = summarize.score(ami_sum, summary)
         l.append(len(texttiling.segment_tokens_sentences(ami_tran)))
@@ -50,17 +50,16 @@ def get_transcripts_stats(transcript_dir, summary_dir):
         fmeasure.append(rouge_stats["rouge1"][2])
 
 
-        #tran_dict[bf] = {"L": len(tex.tiling.segment_token_sentences(ami_tran)), 
-        #                "M":len(tex.tiling.segment_token_sentences(summary)) , 
+        #tran_dict[bf] = {"L": len(tex.tiling.segment_token_sentences(ami_tran)),
+        #                "M":len(tex.tiling.segment_token_sentences(summary)) ,
         #                "H":len(tex.tiling.segment_token_sentences(ami_sum)),
-        #                "precision":rouge_stats["'rouge1'"][0], 
-        #                "recall":"precision":rouge_stats["'rouge1'"][1], 
+        #                "precision":rouge_stats["'rouge1'"][0],
+        #                "recall":"precision":rouge_stats["'rouge1'"][1],
         #                "fmeasure":"precision":rouge_stats["'rouge1'"][2]}
-        
-    data = {"transcipt": bf, "L": l, "M": m, "H":h, "Precision": precision, "Recall":recall, "Fmeasure":fmeasure}
+
+    data = {"transcipt": both_files, "L": l, "M": m, "H":h, "Precision": precision, "Recall":recall, "Fmeasure":fmeasure}
     df = pd.DataFrame.from_dict(data)
-    
+
     df.loc['mean'] = df.mean()
 
     return df
-        

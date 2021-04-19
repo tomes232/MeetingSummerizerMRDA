@@ -66,23 +66,23 @@ def luhn_summary(segments):
 def score(generated_summary, actual_summary):
     scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     scores = scorer.score(generated_summary,actual_summary)
-    return create_score_histogram(scores)
+    return scores
 
 def create_score_histogram(scores):
-
+    print("Creating bar charts.")
     labels = ['precision', 'recall', 'fmeasure']
     keys = ['rouge1', 'rouge2', 'rougeL']
     fig, ax = plt.subplots(1, len(scores))
     for idx, score in enumerate(keys):
         ax[idx].set_ylim([0, 1])
         ax[idx].title.set_text(score)
-        ax[idx].bar(np.arange(3), height=scores[score])
-        ax[idx].set_xticklabels(['','precision', 'recall', 'fmeasure'])
+        ax[idx].bar(np.arange(3), height=scores[score], align='center')
+        ax[idx].set_xticks(np.arange(3))
+        ax[idx].set_xticklabels(['precision', 'recall', 'fmeasure'], rotation=90)
 
         for index, value in enumerate(scores[score]):
             ax[idx].text(index,value, str(value))
 
-        plt.subplots_adjust(hspace = 1)
-
+        fig.subplots_adjust(hspace=2, wspace=2)
+        fig.set_figwidth(15)
     plt.show()
-
